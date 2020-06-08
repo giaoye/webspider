@@ -18,7 +18,7 @@ var (
 // TODO: 改为可配置
 func NewClient() (*mongo.Client, error) {
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  return mongo.Connect(ctx, options.Client().SetMaxPoolSize(5).ApplyURI("mongodb://114.67.169.177:27017"))
+  return mongo.Connect(ctx, options.Client().SetMaxPoolSize(5).ApplyURI("mongodb://localhost:27017"))
 }
 
 func GetClient() (*mongo.Client, error) {

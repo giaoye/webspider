@@ -23,7 +23,10 @@ func main() {
     logger.Info("Visiting", zap.String("url", r.URL.String()))
   })
   
-  c.Visit(URL)
+  err := c.Visit(URL)
+  if err != nil {
+    logger.Error("主页", zap.Any("error", err))
+  }
 }
 
 
@@ -36,7 +39,10 @@ func GetCategoryURLs(c *colly.Collector) {
         path := element.Attr("href")
         if path != "/" {
           fmt.Println(element.Text, URL+path)
-          e.Request.Visit(URL+path) // 访问各电影类型列表页
+          err := e.Request.Visit(URL + path) // 访问各电影类型列表页
+          if err != nil {
+            logger.Error("列表页", zap.Any("error", err))
+          }
         }
       })
     }
@@ -48,6 +54,7 @@ func GetMovieURLs(c *colly.Collector) {
     requestURL := e.Request.URL.String()
     if strings.Contains(requestURL, "vod-type-id") { // 电影类型列表页
       e.ForEach("li", func(i int, element *colly.HTMLElement) {
+        fmt.Println("li.text:", element.Text)
         vb4 := element.DOM.Find("span[class=xing_vb4]")
         var movieName string
         var movieUrl string
@@ -69,16 +76,21 @@ func GetMovieURLs(c *colly.Collector) {
           updateTime = vb6.Text()
           fmt.Println("vb6:", updateTime)
           time.Sleep(25*time.Millisecond)
-          element.Request.Visit(URL+movieUrl)
-        }
-        pageLink := element.DOM.Find("a[class=pagelink_a]").First()
-        if pageLink.Text() == "下一页" {
-          fmt.Println("pageLink:", pageLink.Text())
-          path, exist := pageLink.Attr("href")
-          if exist { // 访问下一页
-            element.Request.Visit(URL+path)
+          err := element.Request.Visit(URL+movieUrl)
+          if err != nil {
+            logger.Error("详情页", zap.Any("error", err))
           }
         }
+        element.ForEach("a[class=pagelink_a]", func(i int, a *colly.HTMLElement) {
+          if a.Text == "下一页" {
+            path := a.Attr("href")
+            fmt.Println(path)
+            err := element.Request.Visit(URL+path)
+            if err != nil {
+              logger.Error("下一页", zap.Any("error", err))
+            }
+           }
+        })
       })
     }
   })

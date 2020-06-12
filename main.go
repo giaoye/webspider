@@ -189,7 +189,7 @@ func GetMovieDetail(c *colly.Collector) {
             //fmt.Println("online:", li.Text)
           })
         }
-        if element.Attr("id") == "play_3" { // 下载链接
+        if element.Attr("id") == "down_1" { // 下载链接
           element.ForEach("li", func(i int, li *colly.HTMLElement) {
             kv := strings.Split(li.Text, "$")
             downLink = append(downLink, &model.Link{

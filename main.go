@@ -16,6 +16,7 @@ var logger = log.GetLogger()
 const URL string = "http://www.zuidazy5.com"
 func main() {
   c := colly.NewCollector()
+  c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 8})
   GetCategoryURLs(c)
   GetMovieURLs(c)
   GetMovieDetail(c)
@@ -41,7 +42,7 @@ func GetCategoryURLs(c *colly.Collector) {
           fmt.Println(element.Text, URL+path)
           err := e.Request.Visit(URL + path) // 访问各电影类型列表页
           if err != nil {
-            logger.Error("列表页", zap.Any("error", err))
+            logger.Error("列表页", zap.Any("error", err), zap.Any("url", path))
           }
         }
       })
@@ -57,12 +58,12 @@ func GetMovieURLs(c *colly.Collector) {
         fmt.Println("li.text:", element.Text)
         vb4 := element.DOM.Find("span[class=xing_vb4]")
         var movieName string
-        var movieUrl string
+        var path string
         if vb4.Text() != "" {
           movieName = vb4.Text()
-          movieUrl, _ = vb4.Find("a").Attr("href")
+          path, _ = vb4.Find("a").Attr("href")
           fmt.Println("vb4:", movieName)
-          fmt.Println(movieUrl)
+          fmt.Println(path)
         }
         vb5 := element.DOM.Find("span[class=xing_vb5]")
         var category string
@@ -76,9 +77,9 @@ func GetMovieURLs(c *colly.Collector) {
           updateTime = vb6.Text()
           fmt.Println("vb6:", updateTime)
           time.Sleep(25*time.Millisecond)
-          err := element.Request.Visit(URL+movieUrl)
+          err := element.Request.Visit(URL+ path)
           if err != nil {
-            logger.Error("详情页", zap.Any("error", err))
+            logger.Error("详情页", zap.Any("error", err), zap.Any("url", path))
           }
         }
         element.ForEach("a[class=pagelink_a]", func(i int, a *colly.HTMLElement) {
@@ -87,7 +88,7 @@ func GetMovieURLs(c *colly.Collector) {
             fmt.Println(path)
             err := element.Request.Visit(URL+path)
             if err != nil {
-              logger.Error("下一页", zap.Any("error", err))
+              logger.Error("下一页", zap.Any("error", err), zap.Any("url", path))
             }
            }
         })
